@@ -1,0 +1,10 @@
+плавает:
+Can swim?
+летает:
+Can fly?
+имеет:
+Have
+цвет:
+Color
+ест:
+What it eat?
