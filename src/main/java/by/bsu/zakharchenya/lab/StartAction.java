@@ -72,7 +72,7 @@ class StartAction implements ActionListener {
         base.targetAttributes.toArray(choices);
 
         final Attribute input = (Attribute) JOptionPane.showInputDialog(getMasterComponent(), "Choose:",
-                "Choose targer", JOptionPane.QUESTION_MESSAGE, null, choices, choices[0]);
+                "Choose target", JOptionPane.QUESTION_MESSAGE, null, choices, choices[0]);
 
         if (input == null) {
             writeLine("User cancelled input!");

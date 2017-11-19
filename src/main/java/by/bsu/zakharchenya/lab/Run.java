@@ -6,7 +6,7 @@ import java.io.File;
 
 public class Run {
 
-    public static String pathToRules = "/data/rules1.txt";
+    public static String pathToRules = "data/rules1.txt";
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame();
@@ -42,7 +42,7 @@ public class Run {
 
         openFile.addActionListener(e -> {
             JFileChooser chooser = new JFileChooser();
-            chooser.setCurrentDirectory(new File("/data/"));
+            chooser.setCurrentDirectory(new File("data/"));
             int returnVal = chooser.showOpenDialog(frame);
             if(returnVal == JFileChooser.APPROVE_OPTION) {
                 System.out.println("You chose to open this file: " +
