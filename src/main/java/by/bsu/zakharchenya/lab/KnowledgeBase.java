@@ -118,7 +118,7 @@ public class KnowledgeBase {
     void initQuestions(FileInputStream fis) throws IOException {
         Scanner sc = new Scanner(fis, StandardCharsets.UTF_8.name());
         while (sc.hasNext()) {
-            String[] strings = sc.nextLine().split(":");
+            String[] strings = sc.nextLine().split(questionAttributeToken);
             String name = strings[0];
             String question = strings[1];
             Attribute attribute = attributes.get(name);

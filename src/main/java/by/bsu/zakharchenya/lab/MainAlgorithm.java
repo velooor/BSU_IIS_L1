@@ -24,15 +24,10 @@ public class MainAlgorithm {
     private String nextQuestion(Attribute target) {
         String[] choices = new String[target.getPossibleValues().size()];
         target.getPossibleValues().toArray(choices);
-
         int defaultChoice = 0;
-
         String input = (String) JOptionPane.showInputDialog(startAction.getMasterComponent(), target.getQuestion(), target.toString(), JOptionPane.QUESTION_MESSAGE, null, choices, choices[defaultChoice]);
 
-        if (input == null) {
-            startAction.writeLine("User canceled data input");
-        }
-
+        if (input == null) { startAction.writeLine("User canceled data input"); }
         return input;
     }
 
@@ -42,82 +37,69 @@ public class MainAlgorithm {
         targets.push(new TargetValue(target, null));
         isFinished = false;
         while (!isFinished) {
-            if (targets.empty()) {
-                isFinished = true;
-                break;
-            }
+            if (targets.empty()) { isFinished = true; break; }
             Attribute current = targets.peek().attribute;
             Rule toAnalize = base.findNextRule(current);
-            if (toAnalize != null) {// can find rule
-                AnalyzeRule(toAnalize);
-            } else {
+            if (toAnalize != null) { analyzeRule(toAnalize); }
+            else {
                 if (current.getQuestion() != null) {
                     String res = nextQuestion(current);
-                    if (res == null) {
-                        return;
-                    }
-                    if (!targets.empty()) {
-                        toAnalize = targets.pop().rule;
-                    }
+                    if (res == null) { return; }
+                    if (!targets.empty()) { toAnalize = targets.pop().rule; }
                     context.put(current, new ContextValue(res, null));
-                    startAction.writeLine("Answered: [" + current + " = " + res + "]\n");
-                    if (toAnalize != null) {
-                        AnalyzeRule(toAnalize);
-                    }
-                } else {
-                    isFinished = true;
-                }
+                    startAction.writeLine("Your answer: " + current + " = " + res + "\n");
+                    if (toAnalize != null) { analyzeRule(toAnalize); }
+                } else { isFinished = true; }
             }
         }
         String result = getTargetValue(target);
         if (result != null) {
-            startAction.writeLine("[FINISH]  I have the answer: " + target + " = " + result + "\n");
+            startAction.writeLine("------ [FINISH]  I have the answer: " + target + " = " + result + " ------\n");
         } else {
-            startAction.writeLine("[FINISH]  Sorry, I can not find the answer...");
+            for (Rule rule : target.getTargetRules()) {
+                analyzeRule(rule);
+            }
+            String resultSecond = getTargetValue(target);
+            if (resultSecond != null) {
+                startAction.writeLine("------ [FINISH]  I have the answer: " + target + " = " + resultSecond + " ------\n");
+            } else {
+                startAction.writeLine("------ [FINISH]  Sorry, I can not find the answer...   ------");
+            }
         }
     }
 
     private String getTargetValue(Attribute target) {
-        if (!context.containsKey(target)) {
-            return null;
-        }
-        return context.get(target).value;
+        if (!context.containsKey(target)) { return null; }
+        else return context.get(target).value;
     }
 
-    private Boolean AnalyzeRule(Rule rule) {
+    private void analyzeRule(Rule rule) {
         boolean res = true;
         rule.setAnalyzed(true);
         for (Map.Entry<Attribute, String> entry : rule.getConditions().entrySet()) {
             Boolean isRight = checkAttribute(entry.getKey(), entry.getValue());
             if (isRight == null) {
                 targets.push(new TargetValue(entry.getKey(), rule));
-                startAction.writeLine("Rule #" + rule + " is UNKNOWNN! \t??? [" + entry.getKey() + "]");
-                return null;
+                startAction.writeLine("Rule " + rule + " is unknown... [?]  (" + entry.getKey() + ")");
+                return;
             } else if (!isRight) {
-                startAction.writeLine("Rule #" + rule + " is FALSE!\t[" + entry.getKey() + " != " + entry.getValue() + "]");
+                startAction.writeLine("Rule " + rule + " is false... [-]   (" + entry.getKey() + " != " + entry.getValue() + ")");
                 res = false;
                 break;
             }
         }
         if (res) {
             context.put(rule.getTargetAttribute(), new ContextValue(rule.getTargetValue(), rule));
-            startAction.writeLine("Rule #" + rule + " is TRUE!\t[" + rule.getTargetAttribute() + " = " + rule.getTargetValue() + "]");
-            if (targets.empty()) {
-                isFinished = true;
-            } else {
-                targets.pop();
-            }
+            startAction.writeLine("Rule " + rule + " is true!  [+]    (" + rule.getTargetAttribute() + " = " + rule.getTargetValue() + ")");
+            if (targets.empty()) { isFinished = true; }
+            else { targets.pop(); }
         }
         rule.setCorrect(res);
-        return res;
     }
 
     private Boolean checkAttribute(Attribute att, String val) {
-        if (!context.containsKey(att)) {
-            return null;
-        } else {
-            return context.get(att).value.equals(val);
-        }
+        if (!context.containsKey(att)) { return null; }
+        else { return context.get(att).value.equals(val); }
     }
 
     private class ContextValue {
