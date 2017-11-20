@@ -1,30 +1,33 @@
 package by.bsu.zakharchenya.lab;
 
+import by.bsu.zakharchenya.lab.entity.Attribute;
+import by.bsu.zakharchenya.lab.entity.Rule;
+
 import javax.swing.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
 
-class Algo {
+public class MainAlgorithm {
     private StartAction startAction;
     private KnowledgeBase base = new KnowledgeBase();
     private Stack<TargetValue> targets = new Stack<>();
     private HashMap<Attribute, ContextValue> context = new HashMap<>();
     private boolean isFinished;
 
-    Algo(StartAction startAction, KnowledgeBase base) {
+    public MainAlgorithm(StartAction startAction, KnowledgeBase base) {
         this.startAction = startAction;
         this.base = base;
     }
 
     private String nextQuestion(Attribute target) {
-        String[] choices = new String[target.possibleValues.size()];
-        target.possibleValues.toArray(choices);
+        String[] choices = new String[target.getPossibleValues().size()];
+        target.getPossibleValues().toArray(choices);
 
         int defaultChoice = 0;
 
-        String input = (String) JOptionPane.showInputDialog(startAction.getMasterComponent(), target.question, target.toString(), JOptionPane.QUESTION_MESSAGE, null, choices, choices[defaultChoice]);
+        String input = (String) JOptionPane.showInputDialog(startAction.getMasterComponent(), target.getQuestion(), target.toString(), JOptionPane.QUESTION_MESSAGE, null, choices, choices[defaultChoice]);
 
         if (input == null) {
             startAction.writeLine("User canceled data input");
@@ -33,7 +36,7 @@ class Algo {
         return input;
     }
 
-    void startAlgo(Attribute target) {
+    public void startAlgo(Attribute target) {
         targets.clear();
         context.clear();
         targets.push(new TargetValue(target, null));
@@ -48,7 +51,7 @@ class Algo {
             if (toAnalize != null) {// can find rule
                 AnalyzeRule(toAnalize);
             } else {
-                if (current.question != null) {
+                if (current.getQuestion() != null) {
                     String res = nextQuestion(current);
                     if (res == null) {
                         return;
@@ -68,9 +71,9 @@ class Algo {
         }
         String result = getTargetValue(target);
         if (result != null) {
-            startAction.writeLine("Answer: [" + target + " = " + result + "]\n");
+            startAction.writeLine("[FINISH]  I have the answer: " + target + " = " + result + "\n");
         } else {
-            startAction.writeLine("Can't find answer!");
+            startAction.writeLine("[FINISH]  Sorry, I can not find the answer...");
         }
     }
 
@@ -83,8 +86,8 @@ class Algo {
 
     private Boolean AnalyzeRule(Rule rule) {
         boolean res = true;
-        rule.isAnalyzed = true;
-        for (Map.Entry<Attribute, String> entry : rule.conditions.entrySet()) {
+        rule.setAnalyzed(true);
+        for (Map.Entry<Attribute, String> entry : rule.getConditions().entrySet()) {
             Boolean isRight = checkAttribute(entry.getKey(), entry.getValue());
             if (isRight == null) {
                 targets.push(new TargetValue(entry.getKey(), rule));
@@ -97,15 +100,15 @@ class Algo {
             }
         }
         if (res) {
-            context.put(rule.targetAttribute, new ContextValue(rule.targetValue, rule));
-            startAction.writeLine("Rule #" + rule + " is TRUE!\t[" + rule.targetAttribute + " = " + rule.targetValue + "]");
+            context.put(rule.getTargetAttribute(), new ContextValue(rule.getTargetValue(), rule));
+            startAction.writeLine("Rule #" + rule + " is TRUE!\t[" + rule.getTargetAttribute() + " = " + rule.getTargetValue() + "]");
             if (targets.empty()) {
                 isFinished = true;
             } else {
                 targets.pop();
             }
         }
-        rule.isCorrect = res;
+        rule.setCorrect(res);
         return res;
     }
 

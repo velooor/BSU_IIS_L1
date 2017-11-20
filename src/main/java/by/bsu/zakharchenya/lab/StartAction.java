@@ -1,5 +1,7 @@
 package by.bsu.zakharchenya.lab;
 
+import by.bsu.zakharchenya.lab.entity.Attribute;
+
 import javax.swing.*;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
@@ -15,7 +17,7 @@ class StartAction implements ActionListener {
     private JScrollPane masterComponent = null;
     private JTextPane textArea = new JTextPane();
 
-    private Algo algo = null;
+    private MainAlgorithm mainAlgorithm = null;
     private KnowledgeBase base = new KnowledgeBase();
 
     StartAction() {
@@ -30,10 +32,10 @@ class StartAction implements ActionListener {
         FileInputStream fisQ = null;
         try {
             fisR = new FileInputStream(Run.pathToRules);
-            fisQ = new FileInputStream("data/question.txt");
+            fisQ = new FileInputStream("data/qq.txt");
             base.initBase(fisR);
             base.initQuestions(fisQ);
-            algo = new Algo(this, base);
+            mainAlgorithm = new MainAlgorithm(this, base);
         } catch (IOException e) {
             writeLine(e.getMessage());
         } finally {
@@ -79,6 +81,6 @@ class StartAction implements ActionListener {
             return;
         }
 
-        new Thread(() -> algo.startAlgo(input)).start();
+        new Thread(() -> mainAlgorithm.startAlgo(input)).start();
     }
 }

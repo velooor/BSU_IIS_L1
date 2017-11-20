@@ -1,5 +1,8 @@
 package by.bsu.zakharchenya.lab;
 
+import by.bsu.zakharchenya.lab.entity.Attribute;
+import by.bsu.zakharchenya.lab.entity.Rule;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -7,12 +10,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
 
-class KnowledgeBase {
-    private final static String ifString = "Если";
-    private final static String thenString = "То";
+public class KnowledgeBase {
+    private final static String ifString = "if";
+    private final static String thenString ="->";
     private final static String isString = "=";
-    private final static String andString = "и";
-    private final static String endAttributeToken = ":";
+    private final static String andString = "&";
+    private final static String endAttributeToken = ";";
+    private final static String questionAttributeToken = ":";
     private HashMap<String, Attribute> attributes = new HashMap<>();
     private HashMap<Integer, Rule> rules = new HashMap<>();
     HashSet<Attribute> targetAttributes = new HashSet<>();
@@ -20,52 +24,72 @@ class KnowledgeBase {
     void initBase(FileInputStream fis) throws IOException {
         Scanner sc = new Scanner(fis);
 
-        while (sc.hasNext() && !sc.hasNextInt()) sc.next();
+       /* while (sc.hasNext() && !sc.hasNextInt())
+            sc.next();*/
 
-        while (sc.hasNextInt()) {
-            Integer id = sc.nextInt();
+        while (sc.hasNext()) {
+            String[] strings = sc.nextLine().split(" ");
+            String idString = strings[0];
+            int id = Integer.parseInt(idString.trim());
+            //int id = (int)idd;
             String token;
             Rule rule = new Rule(id);
-            if (!sc.hasNext() || !sc.next().equals(ifString)) {
-                throw new IOException("cant read rule " + id);
+            if (!strings[1].equals(ifString)) {
+                throw new IOException("can't read rule " + id);
             }
+            int i = 1;
             do {
-                Scanner lineScanner = new Scanner(sc.nextLine());
-                Attribute attribute = readAttribute(lineScanner);
-                String value = readValueToAttribute(lineScanner, attribute);
-                rule.addCondition(attribute, value);
-                if (!sc.hasNext()) {
-                    throw new IOException("cant read rule " + id);
+                token = strings[++i];
+                if(!isString.equals(strings[i+1])) {
+                    throw new IOException("can't read rule " + id);
                 }
-                token = sc.next();
+                if ("".equals(token)) {
+                    throw new IOException("can't read Attribute");
+                }
+                String name = token;
+                Attribute attribute = attributes.computeIfAbsent(name, k -> new Attribute(name));
+                i+=2;
+                String value = strings[i];
+                attribute.add(value);
+                rule.addCondition(attribute, value);
+                i++;
+                token = strings[i];
             } while (token.equals(andString));
-            if (!token.equals(thenString) || !sc.hasNext()) {
-                throw new IOException("cant read rule " + id);
+            if (!token.equals(thenString)) {
+                throw new IOException("can't read rule " + id);
             }
-            Scanner lineScanner = new Scanner(sc.nextLine());
-            Attribute attribute = readAttribute(lineScanner);
-            String value = readValueToAttribute(lineScanner, attribute);
-            rule.targetAttribute = attribute;
-            rule.targetValue = value;
-            attribute.targetRules.add(rule);
-            targetAttributes.add(attribute);
-            rules.put(id, rule);
+            if(token.equals(thenString)){
+                i++;
+                token = strings[i];
+                String name = token;
+                Attribute attribute = attributes.computeIfAbsent(name, k -> new Attribute(name));
+                i+=2;
+                String value = strings[i];
+                attribute.add(value);
+
+                rule.setTargetAttribute(attribute);
+                rule.setTargetValue(value);
+                attribute.getTargetRules().add(rule);
+                targetAttributes.add(attribute);
+                rules.put(id, rule);
+            }
         }
 
         sc.close();
     }
 
-    private Attribute readAttribute(Scanner sc) throws IOException {
+    private Attribute readAttribute(String[] strings) throws IOException {
         String token = "";
         StringBuilder buffer = new StringBuilder();
-        while (sc.hasNext() && !isString.equals(token)) {
+        int i = 1;
+        while (!thenString.equals(token) && !isString.equals(token)) {
             buffer.append(token);
             buffer.append(" ");
-            token = sc.next();
+            token = strings[++i];
         }
         String name = buffer.toString().trim();
         if ("".equals(name)) {
-            throw new IOException("cant read Attribute");
+            throw new IOException("can't read Attribute");
         }
         return attributes.computeIfAbsent(name, k -> new Attribute(name));
     }
@@ -86,30 +110,29 @@ class KnowledgeBase {
 
     void resetRules() {
         for (Rule r : rules.values()) {
-            r.isAnalyzed = false;
-            r.isCorrect = null;
+            r.setAnalyzed(false);
+            r.setCorrect(null);
         }
     }
 
     void initQuestions(FileInputStream fis) throws IOException {
         Scanner sc = new Scanner(fis, StandardCharsets.UTF_8.name());
         while (sc.hasNext()) {
-            String name = sc.nextLine().replace(endAttributeToken, "").trim();
-            if (sc.hasNext()) {
-                String question = sc.nextLine().trim();
-                Attribute attribute = attributes.get(name);
-                if (attribute != null && !"".equals(question)) {
-                    attribute.question = question;
-                    continue;
-                }
+            String[] strings = sc.nextLine().split(":");
+            String name = strings[0];
+            String question = strings[1];
+            Attribute attribute = attributes.get(name);
+            if (attribute != null && !"".equals(question)) {
+                attribute.setQuestion(question);
+                continue;
             }
             throw new IOException("Can't read question for attribute " + name);
         }
     }
 
     Rule findNextRule(Attribute target) {
-        for (Rule rule : target.targetRules) {
-            if (!rule.isAnalyzed) {
+        for (Rule rule : target.getTargetRules()) {
+            if (!rule.isAnalyzed()) {
                 return rule;
             }
         }

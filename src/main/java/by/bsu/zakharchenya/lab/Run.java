@@ -6,7 +6,7 @@ import java.io.File;
 
 public class Run {
 
-    public static String pathToRules = "data/rules1.txt";
+    public static String pathToRules = "data/rr.txt";
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame();
