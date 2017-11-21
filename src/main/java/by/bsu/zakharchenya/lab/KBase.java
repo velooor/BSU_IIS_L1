@@ -10,12 +10,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
 
-public class KnowledgeBase {
+public class KBase {
     private final static String ifString = "if";
     private final static String thenString ="->";
     private final static String isString = "=";
     private final static String andString = "&";
-    private final static String endAttributeToken = ";";
     private final static String questionAttributeToken = ":";
     private HashMap<String, Attribute> attributes = new HashMap<>();
     private HashMap<Integer, Rule> rules = new HashMap<>();
@@ -23,15 +22,10 @@ public class KnowledgeBase {
 
     void initBase(FileInputStream fis) throws IOException {
         Scanner sc = new Scanner(fis);
-
-       /* while (sc.hasNext() && !sc.hasNextInt())
-            sc.next();*/
-
         while (sc.hasNext()) {
             String[] strings = sc.nextLine().split(" ");
             String idString = strings[0];
             int id = Integer.parseInt(idString.trim());
-            //int id = (int)idd;
             String token;
             Rule rule = new Rule(id);
             if (!strings[1].equals(ifString)) {
@@ -76,36 +70,6 @@ public class KnowledgeBase {
         }
 
         sc.close();
-    }
-
-    private Attribute readAttribute(String[] strings) throws IOException {
-        String token = "";
-        StringBuilder buffer = new StringBuilder();
-        int i = 1;
-        while (!thenString.equals(token) && !isString.equals(token)) {
-            buffer.append(token);
-            buffer.append(" ");
-            token = strings[++i];
-        }
-        String name = buffer.toString().trim();
-        if ("".equals(name)) {
-            throw new IOException("can't read Attribute");
-        }
-        return attributes.computeIfAbsent(name, k -> new Attribute(name));
-    }
-
-    private String readValueToAttribute(Scanner sc, Attribute attribute) throws IOException {
-        StringBuilder buffer = new StringBuilder();
-        while (sc.hasNext()) {
-            buffer.append(" ");
-            buffer.append(sc.next());
-        }
-        String value = buffer.toString().trim();
-        if ("".equals(value)) {
-            throw new IOException("cant read Attribute: " + attributes + " because of wrong value");
-        }
-        attribute.add(value);
-        return value;
     }
 
     void resetRules() {

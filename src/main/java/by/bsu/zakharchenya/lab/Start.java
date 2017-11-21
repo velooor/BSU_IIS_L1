@@ -12,15 +12,15 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 
-class StartAction implements ActionListener {
+class Start implements ActionListener {
 
     private JScrollPane masterComponent = null;
     private JTextPane textArea = new JTextPane();
 
-    private MainAlgorithm mainAlgorithm = null;
-    private KnowledgeBase base = new KnowledgeBase();
+    private Analyzer analyzer = null;
+    private KBase base = new KBase();
 
-    StartAction() {
+    Start() {
         SimpleAttributeSet center = new SimpleAttributeSet();
         StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
         StyledDocument doc = textArea.getStyledDocument();
@@ -35,21 +35,13 @@ class StartAction implements ActionListener {
             fisQ = new FileInputStream("data/qq.txt");
             base.initBase(fisR);
             base.initQuestions(fisQ);
-            mainAlgorithm = new MainAlgorithm(this, base);
+            analyzer = new Analyzer(this, base);
         } catch (IOException e) {
             writeLine(e.getMessage());
         } finally {
-            try {
-                if (fisR != null) {
-                    fisR.close();
-                }
-            } catch (IOException e) {
-                writeLine(e.getMessage());
-            }
-            try {
-                if (fisQ != null) {
-                    fisQ.close();
-                }
+            try {if (fisR != null) {fisR.close();}
+            } catch (IOException e) {writeLine(e.getMessage());}
+            try {if (fisQ != null) {fisQ.close();}
             } catch (IOException e) {
                 writeLine(e.getMessage());
             }
@@ -67,20 +59,12 @@ class StartAction implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent event) {
         base.resetRules();
-
         textArea.setText("");
-
         Attribute[] choices = new Attribute[base.targetAttributes.size()];
         base.targetAttributes.toArray(choices);
-
         final Attribute input = (Attribute) JOptionPane.showInputDialog(getMasterComponent(), "Choose:",
                 "Choose target", JOptionPane.QUESTION_MESSAGE, null, choices, choices[0]);
-
-        if (input == null) {
-            writeLine("User cancelled input!");
-            return;
-        }
-
-        new Thread(() -> mainAlgorithm.startAlgo(input)).start();
+        if (input == null) { writeLine("User cancelled input!"); return; }
+        new Thread(() -> analyzer.process(input)).start();
     }
 }

@@ -2,7 +2,6 @@ package by.bsu.zakharchenya.lab;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 
 public class Run {
 
@@ -10,15 +9,10 @@ public class Run {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame();
-            try {
-                UIManager.setLookAndFeel(
-                        UIManager.getSystemLookAndFeelClassName());
-
-            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
-                e.printStackTrace();
-            }
+            try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) { e.printStackTrace(); }
             initFrameDim(frame);
-            StartAction startAction = new StartAction();
+            Start startAction = new Start();
             initApplication(frame, startAction, WindowConstants.EXIT_ON_CLOSE);
         });
     }
@@ -30,29 +24,14 @@ public class Run {
         frame.setResizable(true);
     }
 
-    private static void initApplication(JFrame frame, StartAction startAction, final int onCloseOperation) {
-        frame.setTitle("МАШИНА " +
-                "ДЕДУКТИВНОГО " +
-                "ВЫВОДА");
+    private static void initApplication(JFrame frame, Start startAction, final int onCloseOperation) {
+        frame.setTitle("BSU IIS, L1");
         frame.setDefaultCloseOperation(onCloseOperation);
         frame.getContentPane().add(startAction.getMasterComponent(), BorderLayout.CENTER);
         JPanel panel = new JPanel();
-        JButton openFile = new JButton("Open File");
         JButton start = new JButton("Start");
 
-        openFile.addActionListener(e -> {
-            JFileChooser chooser = new JFileChooser();
-            chooser.setCurrentDirectory(new File("data/"));
-            int returnVal = chooser.showOpenDialog(frame);
-            if(returnVal == JFileChooser.APPROVE_OPTION) {
-                System.out.println("You chose to open this file: " +
-                        chooser.getSelectedFile().getAbsolutePath());
-                pathToRules = chooser.getSelectedFile().getAbsolutePath();
-            }
-        });
-
         start.addActionListener(startAction);
-        panel.add(openFile);
         panel.add(start);
         frame.getContentPane().add(panel, BorderLayout.SOUTH);
         frame.setVisible(true);

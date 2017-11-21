@@ -9,19 +9,19 @@ import java.util.Map;
 import java.util.Stack;
 
 
-public class MainAlgorithm {
-    private StartAction startAction;
-    private KnowledgeBase base = new KnowledgeBase();
+public class Analyzer {
+    private Start startAction;
+    private KBase base = new KBase();
     private Stack<TargetValue> targets = new Stack<>();
     private HashMap<Attribute, ContextValue> context = new HashMap<>();
     private boolean isFinished;
 
-    public MainAlgorithm(StartAction startAction, KnowledgeBase base) {
+    public Analyzer(Start startAction, KBase base) {
         this.startAction = startAction;
         this.base = base;
     }
 
-    private String nextQuestion(Attribute target) {
+    private String processNextQuestion(Attribute target) {
         String[] choices = new String[target.getPossibleValues().size()];
         target.getPossibleValues().toArray(choices);
         int defaultChoice = 0;
@@ -31,24 +31,23 @@ public class MainAlgorithm {
         return input;
     }
 
-    public void startAlgo(Attribute target) {
-        targets.clear();
-        context.clear();
+    public void process(Attribute target) {
+        targets.clear(); context.clear();
         targets.push(new TargetValue(target, null));
         isFinished = false;
         while (!isFinished) {
             if (targets.empty()) { isFinished = true; break; }
             Attribute current = targets.peek().attribute;
-            Rule toAnalize = base.findNextRule(current);
-            if (toAnalize != null) { analyzeRule(toAnalize); }
+            Rule toAnalyze = base.findNextRule(current);
+            if (toAnalyze != null) { analyze(toAnalyze); }
             else {
                 if (current.getQuestion() != null) {
-                    String res = nextQuestion(current);
+                    String res = processNextQuestion(current);
                     if (res == null) { return; }
-                    if (!targets.empty()) { toAnalize = targets.pop().rule; }
+                    if (!targets.empty()) { toAnalyze = targets.pop().rule; }
                     context.put(current, new ContextValue(res, null));
                     startAction.writeLine("Your answer: " + current + " = " + res + "\n");
-                    if (toAnalize != null) { analyzeRule(toAnalize); }
+                    if (toAnalyze != null) { analyze(toAnalyze); }
                 } else { isFinished = true; }
             }
         }
@@ -57,7 +56,7 @@ public class MainAlgorithm {
             startAction.writeLine("------ [FINISH]  I have the answer: " + target + " = " + result + " ------\n");
         } else {
             for (Rule rule : target.getTargetRules()) {
-                analyzeRule(rule);
+                analyze(rule);
             }
             String resultSecond = getTargetValue(target);
             if (resultSecond != null) {
@@ -73,24 +72,24 @@ public class MainAlgorithm {
         else return context.get(target).value;
     }
 
-    private void analyzeRule(Rule rule) {
+    private void analyze(Rule rule) {
         boolean res = true;
         rule.setAnalyzed(true);
         for (Map.Entry<Attribute, String> entry : rule.getConditions().entrySet()) {
             Boolean isRight = checkAttribute(entry.getKey(), entry.getValue());
             if (isRight == null) {
                 targets.push(new TargetValue(entry.getKey(), rule));
-                startAction.writeLine("Rule " + rule + " is unknown... [?]  (" + entry.getKey() + ")");
+                startAction.writeLine("Analyzed: rule " + rule + "... [?]  (" + entry.getKey() + ")");
                 return;
             } else if (!isRight) {
-                startAction.writeLine("Rule " + rule + " is false... [-]   (" + entry.getKey() + " != " + entry.getValue() + ")");
+                startAction.writeLine("Analyzed: rule " + rule + "... [-]   (" + entry.getKey() + ")");
                 res = false;
                 break;
             }
         }
         if (res) {
             context.put(rule.getTargetAttribute(), new ContextValue(rule.getTargetValue(), rule));
-            startAction.writeLine("Rule " + rule + " is true!  [+]    (" + rule.getTargetAttribute() + " = " + rule.getTargetValue() + ")");
+            startAction.writeLine("Analyzed: rule " + rule + "...  [+]    (" + rule.getTargetAttribute() + ")");
             if (targets.empty()) { isFinished = true; }
             else { targets.pop(); }
         }
